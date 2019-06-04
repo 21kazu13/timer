@@ -1,0 +1,93 @@
+li{
+    list-style: none;
+}
+.passsec{
+    padding-top: 0px;
+    padding-bottom: 0px;
+    padding-right: 0px;
+    padding-left: 0px;
+    overflow: hidden;
+    height: 100vh;
+    /* ref.
+    http://weboook.blog22.fc2.com/blog-entry-411.html
+    */
+}
+#upperArea{
+    height: 60%;
+}
+#lowerArea{
+    height: 39%;
+}
+.showRaceTime{
+    padding-top: 5%;
+    font-size: 150px;
+    font-family: inconsolata;
+    color: #ff0000;
+    text-shadow: 0 0 20px #ff0000b0,0 0 20px #ff0000b0;
+    width: 64%;
+    height: 60%;
+    text-align: center;
+    float: left;
+}
+.showImg{
+    width: 35%;
+    height: 100%;
+    float: right;
+}
+.topyachiyo{
+    height: 100%;
+}
+.showDate{
+    width: 64%;
+    height: 20%;
+    font-size: 50px;
+    font-family: inconsolata;
+    color: #ff0000;
+    overflow: hidden;
+    float: left;
+    text-align: right;
+}
+::-webkit-scrollbar{
+    display: none;
+}
+.showButton{
+    width: 64%;
+    height: 19%;
+    font-size: 15px;
+    float: left;
+    text-align: right;
+}
+.button{
+    /*
+    background-color: transparent;
+    border: none;
+    cursor: pointer;
+    outline: none;
+    padding: 0;
+    appearance: none;
+    */
+    border-radius: 25px;
+    outline: none;
+    background-color: black;
+    color: #ff0000;
+    padding: 0.3em 2em;
+    margin-left: 30px;
+}
+.showLap{
+    padding-top: 5px;
+    font-size: 30px;
+    color: #ff0000;
+    width: 34%;
+    height: 100%;
+    overflow: scroll;
+    text-align: center;
+    clear: both;
+    float: left;
+}
+.showMassage{
+    width: 65%;
+    height: 100%;
+    float: right;
+    font-size: 30px;
+    color: #ff0000;
+}
