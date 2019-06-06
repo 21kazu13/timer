@@ -5,15 +5,9 @@ const defaultpts = 6800;
 const defaultmsg = "00'00\"00";
 document.getElementById("showArea").innerHTML = defaultmsg;
 
-
-var lapinhour = [];
-var laptofile = [];
-var suminhour = new Array(6);//周回数 時速 平均ラップ 誤答 立ち回りミス リタ
 var sumtofile = [];
-var sumflag = 0;// 0 -> not summerized yet, 1 -> already summerized
 var msgflag = -1; //0 -> encourge, 1 -> best, 2 -> worst, 3 -> summery of hours
 var recflag; //0 -> not record, 1 -> best lap, -1 -> worst lap
-var meanlap;
 
 //keydown code
 document.onkeydown = keydown;
@@ -112,7 +106,6 @@ function showTimeNow(){
         myNS.params.runhour++;
         hourSummeryPrePare();
     }else if(nowTime.getSeconds() === 2 && myNS.flags.sumflag === 1){
-        console.log('hoge')
         myNS.flags.sumflag = 0;
         myNS.params.misscount = [0,0,0];
     }
@@ -141,7 +134,7 @@ function hourSummeryPrePare(){
 function stop(){
     if(window.confirm('Are you sure to stop the timer?')){
         Promise.resolve(console.log(myNS))//デバッグ用に名前空間
-//        .then(hourSummeryPrePare)
+        .then(hourSummeryPrePare)
         .then(saveornot)
         .then(reset);
 	}
@@ -165,6 +158,7 @@ function saveornot(){
         document.body.appendChild(element);
         element.click();
         document.body.removeChild(element);
+        //時間毎のさまりmyNS.recordinhourも入れたい
     }
 }
 //save records end
