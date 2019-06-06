@@ -1,8 +1,9 @@
 var myNS = myNS || {
-    defaultmsg : "00'00\"00",
     flags : {}
 }; //namespace
-document.getElementById("showArea").innerHTML = myNS.defaultmsg;
+const defaultpts = 6800;
+const defaultmsg = "00'00\"00";
+document.getElementById("showArea").innerHTML = defaultmsg;
 
 
 var lapinhour = [];
@@ -23,9 +24,15 @@ function keydown(){
             stop();
         }else{
             start();
+            myNS.flags.sumflag = 0;
+            myNS.params.runhour = 0;
+            myNS.params.misscount = [0,0,0];
+            myNS.recordinhour = [];
         }
     }else if(event.keyCode == 32 && myNS.flags.runflag == 1){//space
-        lap();
+        Promise.resolve(lap())
+        .then(displayLap)
+        .then(checkLap);
     }else if(event.keyCode == 77){//m
         displayMassage();
     }
@@ -43,7 +50,13 @@ function addzero(num){
 }
 //addzero end
 
-//passsec code
+//count misses code
+function countMiss(button){
+    myNS.params.misscount[button]++;
+    document.activeElement.blur();
+}
+//count misses end
+
 
 //timer start code
 function start(){
@@ -81,94 +94,69 @@ function showTimeNow(){
     var nowTime = new Date();
     var datemsg = nowTime.toLocaleString();
     document.getElementById("dateArea").innerHTML = datemsg;
-
+    /*
     if(nowTime.getMinutes() === 59 && sumflag === 0){
-        sumflag = 1;
+        myNS.flags.sumflag = 1;
+        myNS.params.runhour++;
         hourSummeryPrePare();
         //さまり機能呼び出し
     }else if(nowTime.getMinutes() === 0 && sumflag === 1){
-        sumflag = 0;
-    }
-    //for debug
-    /*
-    if(nowTime.getSeconds() === 1 && sumflag === 0){
-        sumflag = 1;
-        hourSummeryPrePare();
-    }else if(nowTime.getSeconds() === 2 && sumflag === 1){
-        sumflag = 0;
+        myNS.flags.sumflag = 0;
+        myNS.params.misscount = [0,0,0];
     }
     */
+    //for debug
+    
+    if(nowTime.getSeconds() === 1 && myNS.flags.sumflag === 0){
+        myNS.flags.sumflag = 1;
+        myNS.params.runhour++;
+        hourSummeryPrePare();
+    }else if(nowTime.getSeconds() === 2 && myNS.flags.sumflag === 1){
+        console.log('hoge')
+        myNS.flags.sumflag = 0;
+        myNS.params.misscount = [0,0,0];
+    }
+    
 }
 //show nowTime end
 
+//summerize 60min code
+function hourSummeryPrePare(){
+    console.log(myNS.record);
+    var hourrec = myNS.record.filter(array => array[1] === (myNS.params.runhour-1));
+    console.log(hourrec);
+    var meanlap = function(arr) {
+        var sum = 0;
+        arr.forEach(function(elm) {
+            sum += elm[0];
+        });
+        return sum/arr.length;
+    }; 
+    var hoursum = [hourrec.length, hourrec.length*defaultpts, meanlap(hourrec)].concat(myNS.params.misscount);
+    myNS.recordinhour.push(hoursum);
+}
+//summerize 60min end
 
+// stop timer code
 function stop(){
     if(window.confirm('Are you sure to stop the timer?')){
-        promise
+        Promise.resolve(console.log(myNS))//デバッグ用に名前空間
 //        .then(hourSummeryPrePare)
-        .then(saveornot).then(reset)
-        ;//整形が必要
+        .then(saveornot)
+        .then(reset);
 	}
 }
+//stop timer end
 
-function reset(){
-    clearInterval(myNS.timers.clocktimer);
-    clearInterval(myNS.timers.laptimer);
-
-    document.getElementById("showArea").innerHTML = myNS.defaultmsg;
-    document.getElementById("showLapArea").innerHTML = "";
-    document.getElementById("dateArea").innerHTML = "";
-    document.getElementById("massageArea").innerHTML = "";
-    myNS = {
-        defaultmsg : "00'00\"00",
-        flags : {}
-    };
-    msgflag = -1;
-    lapnum = 0;
-}
-
-function lap(){
-    myNS.info.lapnum++;
-    var lapTime = new Date().getTime();
-    var diff = lapTime - myNS.params.launchTime;
-    var difflap = diff/1000.0;
-    myNS.params.launchTime = lapTime;
-    myNS.record.push(difflap);
-
-    var sec100 = Math.floor((diff % 1000 )/ 10);
-    var sec = parseInt((diff / 1000) % 60, 10);
-    var min = parseInt((diff / (1000 * 60)) % 60, 10);
-    var lapmsg = addzero(min) + "'" + addzero(sec) + "\""+ addzero(sec100);
-
-    var lapArea = document.getElementById("showLapArea");
-    var makeli = document.createElement("li");
-    makeli.innerHTML = "LAP "+ myNS.info.lapnum + " : " +lapmsg;
-    checkLap(difflap,makeli,lapArea);
-    lapArea.scrollTo(0, makeli.offsetTop);
-}
-
-//get laptimelist start
-const promise = new Promise((resolve) => {
-   resolve(0);
-});
-
-function download(data){
-    var blob = new Blob(data, {type: "text/plain"});
-    var a = document.createElement("a");
-    a.href = URL.createObjectURL(blob);
-    a.target = '_blank';
-    a.download = 'test.dat';
-    a.click();
-}
-
+//save records code
 function saveornot(){
     if(window.confirm('Do you want to save these records?')){
 //        download(laptofile);
         //参考 https://www.indetail.co.jp/blog/12150/
         var csv = [];
         myNS.record.forEach(function (time, index) {
-            csv.push(index + ',' + time);
-            //csv.push(index + ',' + time.join(',')); for the case myNS.record include array(for hour flag etc)
+            //csv.push(index + ',' + time);
+            csv.push((index+1) + ',' + time.join(','));// for the case myNS.record include array(for hour flag etc)
         });
         console.log(csv);
         var element = document.createElement('a');
@@ -179,7 +167,100 @@ function saveornot(){
         document.body.removeChild(element);
     }
 }
-//get laptimelist end
+//save records end
+
+//reset timer code
+function reset(){
+    clearInterval(myNS.timers.clocktimer);
+    clearInterval(myNS.timers.laptimer);
+
+    document.getElementById("showArea").innerHTML = defaultmsg;
+    document.getElementById("showLapArea").innerHTML = "";
+    document.getElementById("dateArea").innerHTML = "";
+    document.getElementById("massageArea").innerHTML = "";
+    myNS = {
+        flags : {}
+    };
+    msgflag = -1;
+}
+//reset timer end
+
+//calculate laptime code
+function lap(){
+    myNS.info.lapnum++;
+    var lapTime = new Date().getTime();
+    var diff = lapTime - myNS.params.launchTime;//laptime in millisec
+    var difflap = diff/1000.0;//laptime in sec
+    myNS.params.launchTime = lapTime;//for next calculation
+    myNS.record.push([difflap,myNS.params.runhour]);
+    return diff;
+}
+//calculate laptime end
+
+//display laptime code
+function displayLap(diff){
+    var sec100 = Math.floor((diff % 1000 )/ 10);
+    var sec = parseInt((diff / 1000) % 60, 10);
+    var min = parseInt((diff / (1000 * 60)) % 60, 10);
+    var lapmsg = addzero(min) + "'" + addzero(sec) + "\""+ addzero(sec100);
+
+    var lapArea = document.getElementById("showLapArea");
+    var makeli = document.createElement("li");
+    makeli.innerHTML = "LAP "+ myNS.info.lapnum + " : " +lapmsg;
+    lapArea.append(makeli);
+    lapArea.scrollTo(0, makeli.offsetTop);
+    return diff/1000.0;
+}
+//display laptime end
+
+//check laptime (best/worst) code
+function checkLap(thislap){
+    if(myNS.info.lapnum === 1){
+        myNS.info.bestlap = thislap;
+        myNS.info.worstlap = thislap;
+        recflag = 0;
+    }else{
+        if(myNS.info.bestlap > thislap){
+            myNS.info.bestlap = thislap;
+            recflag = 1;
+        }else if(myNS.info.worstlap < thislap){
+            myNS.info.worstlap = thislap;
+            recflag = -1;
+        }
+    }                   
+}
+//check laptime end
+
+
+
+//残りメッセージ類だけ
+//とりあえず上と分離
+function lapmessage(){
+    if(recflag === 1){
+        msgflag = 1;
+        createMassage(msgflag);
+        var congmsg = document.createElement("p");
+        congmsg.className = "onetime";
+        $(".onetime").remove();
+        congmsg.innerHTML = "おめでとう！best lap更新だよ！"
+        $("#massageArea").append(congmsg);
+        document.getElementsByClassName("topyachiyo")[0].src = "yachiyo/201503_yachiyo_happy.png";
+    }else if(recflag === -1){
+        msgflag = 2;
+        createMassage(msgflag);
+        document.getElementsByClassName("topyachiyo")[0].src = "yachiyo/201503_yachiyo_sad.png";
+        var consmsg = document.createElement("p");
+        consmsg.className = "onetime";
+        $(".onetime").remove();
+        consmsg.innerHTML = "残念...worst lapだよ...引きずらないで次頑張れ！"
+        $("#massageArea").append(consmsg);
+    }else{
+        $(".onetime").remove();
+        document.getElementsByClassName("topyachiyo")[0].src = "yachiyo/201503_yachiyo_surprise.png";        
+    }
+}
+
+
 
 //set message from yachiyo start
 function displayMassage(){
@@ -227,74 +308,7 @@ function displayWorstLap(){
 }
 //prepare to display best/worst lap end
 
-//display the present lap and check whether it's best/worst lap or not start
-function checkLap(thislap,elem,area){
-    if(myNS.info.lapnum === 1){
-        bestlap = thislap;
-        worstlap = thislap;
-        recflag = 0;
-        elem.className = "bestLap worstLap";
-    }else{
-        if(bestlap > thislap){
-            bestlap = thislap;
-            recflag = 1;
-            elem.className = "bestLap";
-            $("li").removeClass("bestLap");
-        }else if(worstlap < thislap){
-            worstlap = thislap;
-            recflag = -1;
-            elem.className = "worstLap";
-            $("li").removeClass("worstLap");
-        }else{
-            document.getElementsByClassName("topyachiyo")[0].src = "yachiyo/201503_yachiyo_surprise.png";
-            recflag = 0;
-        }
-    }
-    area.append(elem);
-    if(recflag === 1){
-        msgflag = 1;
-        createMassage(msgflag);
-        var congmsg = document.createElement("p");
-        congmsg.className = "onetime";
-        $(".onetime").remove();
-        congmsg.innerHTML = "おめでとう！best lap更新だよ！"
-        $("#massageArea").append(congmsg);
-        document.getElementsByClassName("topyachiyo")[0].src = "yachiyo/201503_yachiyo_happy.png";
-    }else if(recflag === -1){
-        msgflag = 2;
-        createMassage(msgflag);
-        document.getElementsByClassName("topyachiyo")[0].src = "yachiyo/201503_yachiyo_sad.png";
-        var consmsg = document.createElement("p");
-        consmsg.className = "onetime";
-        $(".onetime").remove();
-        consmsg.innerHTML = "残念...worst lapだよ...引きずらないで次頑張れ！"
-        $("#massageArea").append(consmsg);
-    }else{
-        $(".onetime").remove();
-        document.getElementsByClassName("topyachiyo")[0].src = "yachiyo/201503_yachiyo_surprise.png";        
-    }
-}
-//display the present lap and check whether it's best/worst lap or not end
-
-//prepare and display an hour summery start
-function hourSummeryPrePare(){
-    laptofile.push(lapinhour);
-    lapinhour = [];
-    var i = laptofile.length - 1;
-    meanlap = 0;
-    laptofile[i].forEach(element => {
-        meanlap += element;
-    });
-    meanlap /= laptofile[i].length;
-    msgflag = 3;
-
-    suminhour[0] = laptofile[i].length;
-    suminhour[1] = suminhour[0]*6800;
-    suminhour[2] = meanlap;
-    sumtofile.push(suminhour);
-    suminhour = [];
-    createMassage(msgflag);
-}
+//prepare and display an hour summery start周回数、時速、平均、３ボタン
 function hourSummeryDisplay(){
     var i = sumtofile.length - 1;
     if(sumtofile[i][2]){
@@ -310,3 +324,17 @@ function hourSummeryDisplay(){
     return msg
 }
 //prepare and display an hour summery end
+
+//saveornot の中の処理でできるため以下不要
+/*
+//get laptimelist start
+function download(data){
+    var blob = new Blob(data, {type: "text/plain"});
+    var a = document.createElement("a");
+    a.href = URL.createObjectURL(blob);
+    a.target = '_blank';
+    a.download = 'test.dat';
+    a.click();
+}
+//get laptimelist end
+*/
