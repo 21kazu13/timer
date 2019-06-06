@@ -1,27 +1,30 @@
-var timer, timer2;
-var launchTime,nowTime;
+var myNS = myNS || {
+    defaultmsg : "00'00\"00",
+    flags : {}
+}; //namespace
+document.getElementById("showArea").innerHTML = myNS.defaultmsg;
+
+
 var lapinhour = [];
 var laptofile = [];
 var suminhour = new Array(6);//周回数 時速 平均ラップ 誤答 立ち回りミス リタ
 var sumtofile = [];
 var sumflag = 0;// 0 -> not summerized yet, 1 -> already summerized
-var flag = 0; //flag 0 -> not running, 1 -> running
 var msgflag = -1; //0 -> encourge, 1 -> best, 2 -> worst, 3 -> summery of hours
 var recflag; //0 -> not record, 1 -> best lap, -1 -> worst lap
-var lapnum = 0, lapTime;
-var bestlap = 999.99;
-var worstlap = 0.00;
 var meanlap;
-const defaultmsg = "00'00\"00";
 
 //keydown code
 document.onkeydown = keydown;
+//when onkeydown event occur, function "keydown" is executed.
 function keydown(){
-    if(event.keyCode == 13 && flag == 0){//enter
-        start();
-    }else if(event.keyCode == 13 && flag == 1){//enter
-        stop();
-    }else if(event.keyCode == 32 && flag == 1){//space
+    if(event.keyCode == 13){//enter
+        if(myNS.flags.runflag !== void 0){
+            stop();
+        }else{
+            start();
+        }
+    }else if(event.keyCode == 32 && myNS.flags.runflag == 1){//space
         lap();
     }else if(event.keyCode == 77){//m
         displayMassage();
@@ -41,70 +44,108 @@ function addzero(num){
 //addzero end
 
 //passsec code
-document.getElementById("showArea").innerHTML = defaultmsg;
-function showSec(){
-    nowTime = new Date();
-    diff = new Date(nowTime.getTime() - launchTime);
-    millisec = diff.getMilliseconds();
-    sec100 = Math.floor(millisec / 10);
-    sec = diff.getSeconds();
-    min = diff.getMinutes();
+
+//timer start code
+function start(){
+    document.getElementById("massageArea").innerHTML = "";
+    myNS.params = {};
+    myNS.params.launchTime = new Date().getTime();
+    myNS.timers = {
+        laptimer : setInterval('showSec(myNS.params.launchTime)',10),
+        clocktimer : setInterval('showTimeNow()', 1000)
+    }
+    myNS.flags.runflag = 1;
+    myNS.info = {
+        lapnum : 0,
+        bestlap : 999.99,
+        worstlap : 0.00,
+    }
+    myNS.record = [];
+}
+//timer start end
+
+//show laptime code
+function showSec(time){
+    var diff = new Date().getTime() - time;
+    var sec100 = Math.floor((diff % 1000 )/ 10);
+    var sec = parseInt((diff / 1000) % 60, 10);
+    var min = parseInt((diff / (1000 * 60)) % 60, 10);
 
     var msg = addzero(min) + "'" + addzero(sec) + "\"" + addzero(sec100);
     document.getElementById("showArea").innerHTML = msg;
 }
+//show laptime end
 
-function start(){
-    launchTime = new Date().getTime();
-    timer2 = setInterval('showTimeNow()', 1000);
-    nowTime = new Date();
-    timer = setInterval('showSec()',10);
-    flag = 1;
+//show nowTime start
+function showTimeNow(){
+    var nowTime = new Date();
+    var datemsg = nowTime.toLocaleString();
+    document.getElementById("dateArea").innerHTML = datemsg;
+
+    if(nowTime.getMinutes() === 59 && sumflag === 0){
+        sumflag = 1;
+        hourSummeryPrePare();
+        //さまり機能呼び出し
+    }else if(nowTime.getMinutes() === 0 && sumflag === 1){
+        sumflag = 0;
+    }
+    //for debug
+    /*
+    if(nowTime.getSeconds() === 1 && sumflag === 0){
+        sumflag = 1;
+        hourSummeryPrePare();
+    }else if(nowTime.getSeconds() === 2 && sumflag === 1){
+        sumflag = 0;
+    }
+    */
 }
+//show nowTime end
+
 
 function stop(){
     if(window.confirm('Are you sure to stop the timer?')){
         promise
-        .then(hourSummeryPrePare)
-        .then(reset)
-        .then(saveornot);//整形が必要
+//        .then(hourSummeryPrePare)
+        .then(saveornot).then(reset)
+        ;//整形が必要
 	}
 }
 
 function reset(){
-    lapnum = 0;
-    clearInterval(timer);
-    clearInterval(timer2);
+    clearInterval(myNS.timers.clocktimer);
+    clearInterval(myNS.timers.laptimer);
 
-    document.getElementById("showArea").innerHTML = defaultmsg;
+    document.getElementById("showArea").innerHTML = myNS.defaultmsg;
     document.getElementById("showLapArea").innerHTML = "";
     document.getElementById("dateArea").innerHTML = "";
     document.getElementById("massageArea").innerHTML = "";
-    flag = 0;
+    myNS = {
+        defaultmsg : "00'00\"00",
+        flags : {}
+    };
     msgflag = -1;
+    lapnum = 0;
 }
 
 function lap(){
-    lapnum++;
-    lapTime = new Date().getTime();
-    diff = new Date(lapTime - launchTime);
-    var difflap = (lapTime - launchTime)/1000.0;
-    launchTime = lapTime;
-    lapinhour.push(difflap);
+    myNS.info.lapnum++;
+    var lapTime = new Date().getTime();
+    var diff = lapTime - myNS.params.launchTime;
+    var difflap = diff/1000.0;
+    myNS.params.launchTime = lapTime;
+    myNS.record.push(difflap);
 
-    millisec = diff.getMilliseconds();
-    sec100 = Math.floor(millisec / 10);
-    sec = diff.getSeconds();
-    min = diff.getMinutes();
+    var sec100 = Math.floor((diff % 1000 )/ 10);
+    var sec = parseInt((diff / 1000) % 60, 10);
+    var min = parseInt((diff / (1000 * 60)) % 60, 10);
     var lapmsg = addzero(min) + "'" + addzero(sec) + "\""+ addzero(sec100);
 
     var lapArea = document.getElementById("showLapArea");
     var makeli = document.createElement("li");
-    makeli.innerHTML = "LAP "+ lapnum + " : " +lapmsg;
+    makeli.innerHTML = "LAP "+ myNS.info.lapnum + " : " +lapmsg;
     checkLap(difflap,makeli,lapArea);
     lapArea.scrollTo(0, makeli.offsetTop);
 }
-//passsec end
 
 //get laptimelist start
 const promise = new Promise((resolve) => {
@@ -122,38 +163,23 @@ function download(data){
 
 function saveornot(){
     if(window.confirm('Do you want to save these records?')){
-        download(laptofile);
+//        download(laptofile);
+        //参考 https://www.indetail.co.jp/blog/12150/
+        var csv = [];
+        myNS.record.forEach(function (time, index) {
+            csv.push(index + ',' + time);
+            //csv.push(index + ',' + time.join(',')); for the case myNS.record include array(for hour flag etc)
+        });
+        console.log(csv);
+        var element = document.createElement('a');
+        element.href = 'data:text/csv;charset=utf-8,%EF%BB%BF' + encodeURIComponent(csv.join('\n'));
+        element.setAttribute('download', 'lapdata.csv');
+        document.body.appendChild(element);
+        element.click();
+        document.body.removeChild(element);
     }
 }
 //get laptimelist end
-
-//show nowTime start
-function showTimeNow(){
-    var datemsg = nowTime.toLocaleString('ja-JP');
-    //要素を丁寧に取り出せばカスタマイズ可能
-    document.getElementById("dateArea").innerHTML = datemsg;
-    var test = nowTime;
-    console.log(test);
-    console.log(test.getSeconds());
-    
-    if(nowTime.getMinutes() === 59 && sumflag === 0){
-        sumflag = 1;
-        hourSummeryPrePare();
-    }else if(nowTime.getMinutes() === 0 && sumflag === 1){
-        sumflag = 0;
-    }
-    
-    //for debug
-    /*
-    if(nowTime.getSeconds() === 1 && sumflag === 0){
-        sumflag = 1;
-        hourSummeryPrePare();
-    }else if(nowTime.getSeconds() === 2 && sumflag === 1){
-        sumflag = 0;
-    }
-    */
-}
-//show nowTime end
 
 //set message from yachiyo start
 function displayMassage(){
@@ -203,7 +229,7 @@ function displayWorstLap(){
 
 //display the present lap and check whether it's best/worst lap or not start
 function checkLap(thislap,elem,area){
-    if(lapnum === 1){
+    if(myNS.info.lapnum === 1){
         bestlap = thislap;
         worstlap = thislap;
         recflag = 0;
