@@ -8,6 +8,7 @@ li{
     padding-left: 0px;
     overflow: hidden;
     height: 100vh;
+    width: 100vw;
     /* ref.
     http://weboook.blog22.fc2.com/blog-entry-411.html
     */
@@ -20,29 +21,21 @@ li{
 }
 .showRaceTime{
     padding-top: 5%;
-    font-size: 150px;
-    font-family: inconsolata;
-    color: #ff0000;
-    text-shadow: 0 0 20px #ff0000b0,0 0 20px #ff0000b0;
     width: 64%;
     height: 60%;
+    font-size: calc(100vw / 10);
+    font-family: monospace;
+    color: #ff0000;
+    text-shadow: 0 0 calc(100vw / 75) #ff0000b0,0 0 calc(100vw / 75) #ff0000b0;
     text-align: center;
     float: left;
-}
-.showImg{
-    width: 35%;
-    height: 100%;
-    float: right;
-}
-.topyachiyo{
-    height: 100%;
 }
 .showDate{
     width: 64%;
     height: 20%;
-    font-size: 50px;
-    font-family: inconsolata;
-    color: #ff0000;
+    font-size: calc(100vw / 30);
+    font-family: monospace;
+    color: #ff0000b0;
     overflow: hidden;
     float: left;
     text-align: right;
@@ -53,7 +46,7 @@ li{
 .showButton{
     width: 64%;
     height: 19%;
-    font-size: 15px;
+    font-size: calc(100vw / 75);
     float: left;
     text-align: right;
 }
@@ -66,18 +59,19 @@ li{
     padding: 0;
     appearance: none;
     */
-    border-radius: 25px;
+    border-radius: calc(100vw / 75);
     outline: none;
     background-color: black;
     color: #ff0000;
-    padding: 0.3em 2em;
-    margin-left: 30px;
+    padding: 0.1em 1em;
+    margin-left: calc(100vw / 50);
 }
 .showLap{
-    padding-top: 5px;
-    font-size: 30px;
+    font-family: monospace;
+    padding-top: calc(100vw / 300);
+    font-size: calc(100vw / 40);
     color: #ff0000;
-    width: 34%;
+    width: 54%;
     height: 100%;
     overflow: scroll;
     text-align: center;
@@ -85,9 +79,17 @@ li{
     float: left;
 }
 .showMessage{
-    width: 65%;
+    padding-right: calc(100vw / 10);
+    font-family: monospace;
+    width: 45%;
+    height: 100%;
+    font-size: calc(100vw / 50);
+    color: #ff0000;
+    text-align: right;
+    float: right;
+}
+.showImg{
+    width: 35%;
     height: 100%;
     float: right;
-    font-size: 30px;
-    color: #ff0000;
 }
