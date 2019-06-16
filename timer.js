@@ -90,7 +90,7 @@ function showSec(time){
 function showTimeNow(){
     var nowTime = new Date();
     document.getElementById("dateArea").innerHTML = nowTime.toLocaleString();
-    /*
+
     if(nowTime.getMinutes() === 59 && sumflag === 0){
         myNS.flags.sumflag = 1;
         myNS.params.runhour++;
@@ -105,9 +105,9 @@ function showTimeNow(){
         myNS.flags.sumflag = 0;
         myNS.params.misscount = [0,0,0];
     }
-    */
+
+    /*
     //for debug
-    
     if(nowTime.getSeconds() === 1 && myNS.flags.sumflag === 0){
         myNS.flags.sumflag = 1;
         myNS.params.runhour++;
@@ -122,7 +122,7 @@ function showTimeNow(){
         myNS.flags.sumflag = 0;
         myNS.params.misscount = [0,0,0];
     }
-    
+    */
 }
 //show nowTime end
 
