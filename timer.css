@@ -21,9 +21,10 @@ li{
 }
 .showRaceTime{
     padding-top: 5%;
+    padding-bottom: 5%;
     width: 64%;
     height: 60%;
-    font-size: calc(100vw / 10);
+    font-size: calc(100vw / 12);
     font-family: monospace;
     color: #ff0000;
     text-shadow: 0 0 calc(100vw / 75) #ff0000b0,0 0 calc(100vw / 75) #ff0000b0;
@@ -33,7 +34,7 @@ li{
 .showDate{
     width: 64%;
     height: 20%;
-    font-size: calc(100vw / 30);
+    font-size: calc(100vw / 35);
     font-family: monospace;
     color: #ff0000b0;
     overflow: hidden;
