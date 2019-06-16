@@ -91,7 +91,7 @@ function showTimeNow(){
     var nowTime = new Date();
     document.getElementById("dateArea").innerHTML = nowTime.toLocaleString();
 
-    if(nowTime.getMinutes() === 59 && sumflag === 0){
+    if(nowTime.getMinutes() === 59 && myNS.flags.sumflag === 0){
         myNS.flags.sumflag = 1;
         myNS.params.runhour++;
         Promise.resolve(hourSummeryPrePare(myNS.params.runhour))
@@ -100,10 +100,12 @@ function showTimeNow(){
             return hoursum;
         })
         .then(hourSummeryDisplay)
-        .then(displayMessage);
-    }else if(nowTime.getMinutes() === 0 && sumflag === 1){
+        .then(displayMessage)
+        .then(function(){
+            myNS.params.misscount = [0,0,0];
+        });
+    }else if(nowTime.getMinutes() === 0 && myNS.flags.sumflag === 1){
         myNS.flags.sumflag = 0;
-        myNS.params.misscount = [0,0,0];
     }
 
     /*
@@ -128,7 +130,6 @@ function showTimeNow(){
 
 //summerize 60min code
 function hourSummeryPrePare(thishour){
-    console.log('thishour:'+thishour);
     var hourrec = myNS.record.filter(array => array[1] === (thishour-1));
     var hourmeanlap = function(arr) {
         var sum = 0;
@@ -136,7 +137,7 @@ function hourSummeryPrePare(thishour){
             sum += elm[0];
         });
         return Math.round(sum/arr.length*1000)/1000;
-    }; 
+    };
     var hoursum = [hourrec.length, hourrec.length*defaultpts, hourmeanlap(hourrec)].concat(myNS.params.misscount);
     return hoursum;
 }
@@ -154,7 +155,6 @@ function hourSummeryDisplay(sum){
     }else{
         msg = "No running in previous hour!"
     }
-    console.log(msg);
     myNS.flags.msgflag = 0;
     return msg
 }
@@ -163,7 +163,7 @@ function hourSummeryDisplay(sum){
 // stop timer code
 function stop(){
     if(window.confirm('Are you sure to stop the timer?')){
-        Promise.resolve(console.log('[DEBUG]'+myNS))
+        Promise.resolve(myNS.params.runhour+1)
         .then(hourSummeryPrePare)
         .then(function(hoursum){
             myNS.recordinhour.push(hoursum);
@@ -182,7 +182,6 @@ function saveornot(){
         myNS.record.forEach(function (time, index){
             csv.push((index+1) + ',' + time.join(','));// for the case myNS.record include array(for hour flag etc)
         });
-        console.log(csv);
         var element = document.createElement('a');
         element.href = 'data:text/csv;charset=utf-8,%EF%BB%BF' + encodeURIComponent(csv.join('\n'));
         element.setAttribute('download', 'lapdata.csv');
@@ -194,7 +193,6 @@ function saveornot(){
         myNS.recordinhour.forEach(function (time, index){
             csv2.push((index) + ',' + time.join(','));// for the case myNS.record include array(for hour flag etc)
         });
-        console.log(csv2);
         var element2 = document.createElement('a');
         element2.href = 'data:text/csv;charset=utf-8,%EF%BB%BF' + encodeURIComponent(csv2.join('\n'));
         element2.setAttribute('download', 'sumdata.csv');
